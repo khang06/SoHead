@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -30,16 +28,16 @@ import gaming.khangaroo.sohead.SoHeadMod;
 // I can't mixin authlib, so this is the next best thing
 @Mixin(targets = "net.minecraft.client.texture.PlayerSkinProvider$1")
 public class PlayerSkinProvider1Mixin {
-	private final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
-	
+    private final Gson gson = new GsonBuilder().registerTypeAdapter(UUID.class, new UUIDTypeAdapter()).create();
+
     private static final String[] ALLOWED_DOMAINS = {
-            ".minecraft.net",
-            ".mojang.com",
-            ".discordapp.com",
-            ".discordapp.net",
-            ".imgur.com"
-        };
-	
+        ".minecraft.net",
+        ".mojang.com",
+        ".discordapp.com",
+        ".discordapp.net",
+        ".imgur.com"
+    };
+
     private static boolean isDomainOnList(String domain, String[] list) {
         for (final String entry : list) {
             if (domain.endsWith(entry)) {
@@ -48,7 +46,7 @@ public class PlayerSkinProvider1Mixin {
         }
         return false;
     }
-    
+
     private static boolean isAllowedTextureDomain(final String url) {
         URI uri;
 
@@ -61,9 +59,10 @@ public class PlayerSkinProvider1Mixin {
         final String domain = uri.getHost();
         return isDomainOnList(domain, ALLOWED_DOMAINS);
     }
-	
-	@Redirect(method = "load(Ljava/lang/String;)Ljava/util/Map;", at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/minecraft/MinecraftSessionService;getTextures(Lcom/mojang/authlib/GameProfile;Z)Ljava/util/Map;"))
-	private Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getTexturesInjected(MinecraftSessionService sessionService, GameProfile profile, boolean requireSecure) {
+
+    @Redirect(method = "load(Ljava/lang/String;)Ljava/util/Map;", at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/minecraft/MinecraftSessionService;getTextures(Lcom/mojang/authlib/GameProfile;Z)Ljava/util/Map;"))
+    private Map<MinecraftProfileTexture.Type, MinecraftProfileTexture> getTexturesInjected(
+            MinecraftSessionService sessionService, GameProfile profile, boolean requireSecure) {
         final Property textureProperty = Iterables.getFirst(profile.getProperties().get("textures"), null);
 
         if (textureProperty == null) {
@@ -72,7 +71,8 @@ public class PlayerSkinProvider1Mixin {
 
         final MinecraftTexturesPayload result;
         try {
-            final String json = new String(Base64.getDecoder().decode(textureProperty.getValue()), StandardCharsets.UTF_8);
+            final String json = new String(Base64.getDecoder().decode(textureProperty.getValue()),
+                    StandardCharsets.UTF_8);
             result = gson.fromJson(json, MinecraftTexturesPayload.class);
         } catch (final JsonParseException e) {
             SoHeadMod.LOGGER.error("Could not decode textures payload", e);
@@ -82,15 +82,16 @@ public class PlayerSkinProvider1Mixin {
         if (result == null || result.getTextures() == null) {
             return new HashMap<>();
         }
-        
-        for (final Map.Entry<MinecraftProfileTexture.Type, MinecraftProfileTexture> entry : result.getTextures().entrySet()) {
+
+        for (final Map.Entry<MinecraftProfileTexture.Type, MinecraftProfileTexture> entry : result.getTextures()
+                .entrySet()) {
             final String url = entry.getValue().getUrl();
             if (!isAllowedTextureDomain(url)) {
-            	SoHeadMod.LOGGER.error("Textures payload contains blocked domain: {}", url);
+                SoHeadMod.LOGGER.error("Textures payload contains blocked domain: {}", url);
                 return new HashMap<>();
             }
         }
 
         return result.getTextures();
-	}
+    }
 }
