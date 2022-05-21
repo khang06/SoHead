@@ -1,9 +1,4 @@
-# Fabric Example Mod
+# SoHead
+Reenable the HD head exploit and allow loading from Imgur. Get some HD heads [here](https://r74n.com/mc/heads)!
 
-## Setup
-
-For setup instructions please see the [fabric wiki page](https://fabricmc.net/wiki/tutorial:setup) that relates to the IDE that you are using.
-
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and incorporate it in your own projects.
+![](https://cdn.discordapp.com/attachments/729192402127945758/977597129365278770/2022-05-21_11.41.29.png)
